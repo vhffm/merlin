@@ -130,8 +130,8 @@ def checktick(planets, galaxies, alliances, userfeed):
         return False
     planet_tick=int(m.group(1))
     excaliburlog("Planet dump for tick %s" % (planet_tick,))
-    # Skip next three lines; two are junk, next is blank, data starts next
-    planets.readline();planets.readline();planets.readline();
+    # Skip next four lines; three are junk, next is blank, data starts next
+    planets.readline();planets.readline();planets.readline();planets.readline();
 
     # As above
     galaxies.readline();galaxies.readline();galaxies.readline();
@@ -143,7 +143,7 @@ def checktick(planets, galaxies, alliances, userfeed):
         return False
     galaxy_tick=int(m.group(1))
     excaliburlog("Galaxy dump for tick %s" % (galaxy_tick,))
-    galaxies.readline();galaxies.readline();galaxies.readline();
+    galaxies.readline();galaxies.readline();galaxies.readline();galaxies.readline();
 
     # As above
     alliances.readline();alliances.readline();alliances.readline();
@@ -155,7 +155,7 @@ def checktick(planets, galaxies, alliances, userfeed):
         return False
     alliance_tick=int(m.group(1))
     excaliburlog("Alliance dump for tick %s" % (alliance_tick,))
-    alliances.readline();alliances.readline();alliances.readline();
+    alliances.readline();alliances.readline();alliances.readline();alliances.readline();
 
     # As above
     userfeed.readline();userfeed.readline();userfeed.readline();
@@ -167,7 +167,7 @@ def checktick(planets, galaxies, alliances, userfeed):
         return False
     userfeed_tick=int(m.group(1))
     excaliburlog("UserFeed dump for tick %s" % (userfeed_tick,))
-    userfeed.readline();userfeed.readline();userfeed.readline();
+    userfeed.readline();userfeed.readline();userfeed.readline();userfeed.readline();
 
     # Check the ticks of the dumps are all the same and that it's
     #  greater than the previous tick, i.e. a new tick
