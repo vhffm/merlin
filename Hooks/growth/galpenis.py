@@ -23,7 +23,7 @@ from Core.maps import Galaxy
 from Core.loadable import loadable, route
 
 class galpenis(loadable):
-    """Cock"""
+    """Galaxy score gain in the last 72 ticks"""
     usage = " <x:y>"
     access = 2 # Public
     

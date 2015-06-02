@@ -24,7 +24,7 @@ from Core.maps import Alliance
 from Core.loadable import loadable, route
 
 class apenis(loadable):
-    """Schlong"""
+    """Alliance score gain in the last 72 ticks"""
     usage = " [alliance]"
     access = 2 # Public
     

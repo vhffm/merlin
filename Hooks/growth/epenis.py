@@ -24,7 +24,7 @@ from Core.maps import User
 from Core.loadable import loadable, route
 
 class epenis(loadable):
-    """Penis"""
+    """Planet score gain in the last 72 ticks"""
     usage = " [user]"
     access = 3 # Member
     

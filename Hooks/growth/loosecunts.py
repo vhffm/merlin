@@ -25,6 +25,7 @@ from Core.maps import User, epenis
 from Core.loadable import loadable, route
 
 class loosecunts(loadable):
+    """Members with the lowest score gain in the last 72 ticks"""
     access = 3 # Member
     
     @route(access="loosecunts")
