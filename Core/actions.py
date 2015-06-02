@@ -83,7 +83,7 @@ class Action(Message):
                         i = max(line.rfind(" ", 0, i), line.rfind(",", 0, i))
                         if i == -1:
                             while len(params + line) > 450:
-                                Connection.write((params + line)[:450])
+                                Connection.write((params + line)[:450], p)
                                 line = line[450 - len(params):]
                             i = len(line)
                             continue
