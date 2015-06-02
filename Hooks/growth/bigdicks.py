@@ -25,7 +25,7 @@ from Core.maps import User, epenis
 from Core.loadable import loadable, route
 
 class bigdicks(loadable):
-    """BEEFCAKE!!!11onetwo"""
+    """Members with the highest score gain in the last 72 ticks"""
     
     @route(access = "member")
     def execute(self, message, user, params):
