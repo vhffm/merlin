@@ -26,8 +26,8 @@ from Core.maps import User
 from Core.loadable import system
 from Hooks.scans.parser import parse
 
-scanre=re.compile("https?://[^/]+/(?:showscan|waves).pl\?scan_id=([0-9a-zA-Z]+)")
-scangrpre=re.compile("https?://[^/]+/(?:showscan|waves).pl\?scan_grp=([0-9a-zA-Z]+)")
+scanre=re.compile("https?://[^/]+/(?:showscan|waves).pl\?scan_id=([0-9a-zA-Z]{15})")
+scangrpre=re.compile("https?://[^/]+/(?:showscan|waves).pl\?scan_grp=([0-9a-zA-Z]{15})")
 
 @system('PRIVMSG')
 def catcher(message):
