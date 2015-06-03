@@ -22,9 +22,9 @@
 import os, sys
 sys.path.append('/home/merlin/')
 os.chdir('/home/merlin/')
-os.environ['DJANGO_SETTINGS_MODULE'] = 'Arthur.settings'
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Arthur.settings")
 
 import Arthur
 
-from django.core.handlers.wsgi import WSGIRequest, WSGIHandler
-application = WSGIHandler()
+from django.core.wsgi import get_wsgi_application
+application = get_wsgi_application()
