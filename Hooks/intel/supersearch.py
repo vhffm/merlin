@@ -124,6 +124,7 @@ class supersearch(loadable):
             sort = order["score"]
         for order in sort:
             Q = Q.order_by(order)
+        Q = Q.order_by(Planet.id)
         
         result = Q.limit(6).offset(offset).all()
         
