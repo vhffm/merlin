@@ -491,6 +491,31 @@ class GalaxyHistory(Base):
     private = Column(Boolean)
     def planet(self, z):
         return self.planet_loader.filter_by(z=z).first()
+
+    @staticmethod
+    def load(x,y,tick,active=True,closest=False):
+        if not x or not y or not tick:
+            return None
+        Q = session.query(GalaxyHistory)
+        Q = Q.filter_by(x=x, y=y)
+        if closest:
+            Q = Q.order_by(asc(func.abs(tick-GalaxyHistory.tick)))
+        else:
+            Q = Q.filter_by(tick=tick)
+        galaxy = Q.filter_by(active=True).first()
+        if galaxy is not None:
+            if galaxy.tick == tick:
+                return galaxy
+            if active:
+                return galaxy if closest else None
+        if active:
+            return None
+        galaxy = Q.first()
+        if closest or galaxy.tick == tick:
+            return galaxy
+        else:
+            return None
+
 Galaxy.history_loader = relation(GalaxyHistory, backref=backref('current', lazy='select'), lazy='dynamic')
 ClusterHistory.galaxies = relation(GalaxyHistory, order_by=asc(GalaxyHistory.y), backref="cluster")
 ClusterHistory.galaxy_loader = dynamic_loader(GalaxyHistory)

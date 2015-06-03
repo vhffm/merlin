@@ -27,7 +27,7 @@ from Core.config import Config
 from Core.paconf import PA
 from Core.string import decode, excaliburlog, errorlog, CRLF
 from Core.db import true, false, session
-from Core.maps import Updates, galpenis, apenis, Scan, Planet, Alliance, PlanetHistory, Galaxy, Feed, War
+from Core.maps import Updates, galpenis, apenis, Scan, Planet, Alliance, PlanetHistory, GalaxyHistory, Feed, War
 from Core.maps import galaxy_temp, planet_temp, alliance_temp, planet_new_id_search, planet_old_id_search
 from Hooks.scans.parser import parse
 from ConfigParser import ConfigParser as CP
@@ -196,21 +196,27 @@ def parse_userfeed(userfeed):
         if category == "Planet Ranking":
             # "TAKIYA GENJI of SUZURAN (3:2:7) is now rank 278 (formerly rank 107)"
             m = re.match(r"(.*) \((\d+):(\d+):(\d+)\)", text)
-            f.planet_id = PlanetHistory.load(m.group(2), m.group(3), m.group(4), tick).id
+            ph = PlanetHistory.load(m.group(2), m.group(3), m.group(4), tick)
+            f.planet_id = ph.id if ph else None
         elif category == "Galaxy Ranking":
             # "4:7 ("Error we only have 12 planets") has taken over rank 1 (formerly rank 2)"
             m = re.match(r"^\s*(\d+):(\d+)", text)
-            f.galaxy_id = Galaxy.load(m.group(1), m.group(2)).id
+            gh = GalaxyHistory.load(m.group(1), m.group(2))
+            f.galaxy_id = gh.id if gh else None
         elif category == "Alliance Ranking":
             # "p3nguins has taken over rank 1 (formerly rank 2)"
             m = re.match(r"(.*) has taken", text)
-            f.alliance1_id = Alliance.load(m.group(1)).id
+            alliance = Alliance.load(m.group(1))
+            f.alliance1_id = alliance.id if alliance else None
         elif category == "Alliance Merging":
             # "The alliances "HEROES" and "TRAITORS" have merged to form "TRAITORS"."
             m = re.match(r"The alliances \"(.*)\" and \"(.*)\" have merged to form \"(.*)\"", text)
-            f.alliance1_id = Alliance.load(m.group(1)).id
-            f.alliance2_id = Alliance.load(m.group(2)).id
-            f.alliance3_id = Alliance.load(m.group(3)).id
+            alliance = Alliance.load(m.group(1))
+            f.alliance1_id = alliance.id if alliance else None
+            alliance = Alliance.load(m.group(2))
+            f.alliance2_id = alliance.id if alliance else None
+            alliance = Alliance.load(m.group(3))
+            f.alliance3_id = alliance.id if alliance else None
             for prefix in prefixes:
                 session.execute(text("UPDATE %sintel SET alliance_id = %s WHERE alliance_id = %s or alliance_id = %s;" % (prefix, f.alliance3_id, f.alliance2_id, f.alliance1_id)))
         elif category == "Relation Change":
