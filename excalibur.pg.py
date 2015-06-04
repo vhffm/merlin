@@ -201,7 +201,7 @@ def parse_userfeed(userfeed):
         elif category == "Galaxy Ranking":
             # "4:7 ("Error we only have 12 planets") has taken over rank 1 (formerly rank 2)"
             m = re.match(r"^\s*(\d+):(\d+)", text)
-            gh = GalaxyHistory.load(m.group(1), m.group(2))
+            gh = GalaxyHistory.load(m.group(1), m.group(2), tick)
             f.galaxy_id = gh.id if gh else None
         elif category == "Alliance Ranking":
             # "p3nguins has taken over rank 1 (formerly rank 2)"
