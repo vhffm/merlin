@@ -38,7 +38,7 @@ class lookup(loadable):
     def execute(self, request, user):
         lookup = (request.REQUEST.get("lookup") or "").strip()
         if not lookup:
-            if user.group_id != 2:
+            if user.has_access("arthur_dashboard"):
                 return HttpResponseRedirect(reverse("dashboard", kwargs={"username":user.name}))
             return HttpResponseRedirect("/")
         

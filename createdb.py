@@ -105,6 +105,8 @@ if (not round) or fromlegacy:
     session.commit()
 
     print "Setting up default access levels"
+    addaccess("is_member", 3)
+    addaccess("arthur_dashboard", 3)
     addaccess("arthur_intel", 3)
     addaccess("arthur_scans", 3)
     addaccess("arthur_attacks", 3)

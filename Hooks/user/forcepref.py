@@ -85,7 +85,7 @@ class forcepref(loadable):
                         continue
                     user.planet = planet
                     reply += " planet=%s:%s:%s"%(planet.x,planet.y,planet.z)
-                    if user.group_id != 2:
+                    if user.has_access("is_member"):
                         alliance = Alliance.load(Config.get("Alliance","name"))
                         if planet.intel is None:
                             planet.intel = Intel(nick=user.name, alliance=alliance)

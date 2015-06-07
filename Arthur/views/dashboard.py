@@ -38,7 +38,7 @@ urlpatterns = patterns('Arthur.views.dashboard',
 @menu(name, "Dashboard")
 @load
 class dashboard(loadable):
-    access = "member"
+    access = "arthur_dashboard"
     
     def execute(self, request, user, username="", dashuser=None):
         dashuser = dashuser or User.load(username or user.name, exact=False)

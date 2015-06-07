@@ -49,22 +49,14 @@ class loadable(_base):
         self = super(loadable, cls).__new__(cls)
         self.name = cls.__name__
         
-        try:
-            self.access = int(cls.access)
-        except ValueError:
-            if cls.access == "member":
-                self.access = 3
-            else: 
-                a = Access.load(cls.access)
-                if a:
-                    self.access = a.name
-                else:
-                    raise LoadableError("Invalid access level: %s" % cls.access)
-        except TypeError:
-            if cls.access is None:
-                self.access = cls.access
+        if cls.access:
+            a = Access.load(cls.access)
+            if a:
+                self.access = a.name
             else:
                 raise LoadableError("Invalid access level: %s" % cls.access)
+        else:
+            self.access = None
         
         return self
     
@@ -169,7 +161,7 @@ class loadable(_base):
         if planet is not None:
             if self.is_user(user):
                 user.planet = planet
-                if user.group_id != 2:
+                if user.has_access("is_member"):
                     alliance = Alliance.load(Config.get("Alliance","name"))
                     if planet.intel is None:
                         planet.intel = Intel(nick=user.name, alliance=alliance)

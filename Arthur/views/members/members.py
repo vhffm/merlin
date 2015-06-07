@@ -31,7 +31,7 @@ bot = Config.get("Connection","nick")
 @menu(bot, "Members")
 @load
 class members(loadable):
-    access = "member"
+    access = "members"
     def execute(self, request, user, sort=None):
         
         order =  {"name"  : (asc(User.name),),
@@ -66,7 +66,7 @@ class members(loadable):
 @menu(bot, "Galmates")
 @load
 class galmates(loadable):
-    access = "member"
+    access = "members"
     def execute(self, request, user, sort=None):
         
         order =  {"name"  : (asc(User.name),),
@@ -91,7 +91,7 @@ class galmates(loadable):
 @menu(bot, "Channels")
 @load
 class channels(loadable):
-    access = "member"
+    access = "channels"
     def execute(self, request, user, sort=None):
         
         order =  {"name"  : (asc(Channel.name),),

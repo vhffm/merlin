@@ -30,7 +30,7 @@ name = Config.get("Alliance", "name")
 @menu(name, "eQueens")
 @load
 class equeens(loadable):
-    access = "member"
+    access = "bigdicks"
     def execute(self, request, user):
         
         Q = session.query(User, Planet, epenis)

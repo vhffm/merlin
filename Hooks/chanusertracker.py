@@ -201,7 +201,7 @@ def letmein(message):
     try:
         chan = message.get_chan() if message.in_chan() else None
         user = CUT.auth_user(message.get_nick(), chan, message.get_pnick, username=msg[1], password=msg[2])
-        if (user is not None) and user.group_id != 2:
+        if (user is not None):
             if user.group_id == 1 and len(msg) > 3:
                 for c in msg[3:]:
                     message.invite(message.get_nick(), c)
