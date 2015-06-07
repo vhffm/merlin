@@ -35,9 +35,9 @@ class orphans(loadable):
         user = aliased(User)
         sponsor = aliased(User)
         Q = session.query(user.name)
-        Q = Q.filter(and_(user.active == True, user.access >= Config.get("Access", "member")))
+        Q = Q.filter(and_(user.active == True, user.access >= Config.getint("Access", "member")))
         Q = Q.filter(user.sponsor.ilike(sponsor.name))
-        Q = Q.filter(or_(sponsor.active == False, sponsor.access < Config.get("Access", "member")))
+        Q = Q.filter(or_(sponsor.active == False, sponsor.access < Config.getint("Access", "member")))
         result = Q.all()
         
         if len(result) < 1:

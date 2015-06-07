@@ -38,7 +38,7 @@ class channels(loadable):
 
         Q = session.query(Channel)
         if not params.group(1):
-            Q = Q.filter(Channel.userlevel > (Config.get("Access",  "galmate") if "galmate" in Config.options("Access") else 0))
+            Q = Q.filter(Channel.userlevel > (Config.getint("Access",  "galmate") if "galmate" in Config.options("Access") else 0))
         for c in Q.all():
             reply.append(c.name)
         

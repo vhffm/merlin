@@ -77,9 +77,9 @@ if not mysql:
 Base.metadata.create_all()
 
 print "Setting up default channels"
-userlevel = Config.get("Access", "member")
-maxlevel = Config.get("Access", "admin")
-gallevel = Config.get("Access", "galmate")
+userlevel = Config.getint("Access", "member")
+maxlevel = Config.getint("Access", "admin")
+gallevel = Config.getint("Access", "galmate")
 for chan, name in Config.items("Channels"):
     try:
         channel = Channel(name=name)
