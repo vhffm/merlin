@@ -37,7 +37,9 @@ class attack(loadable):
         tick = Updates.current_tick()
         
         Q = session.query(Attack)
-        Q = Q.filter(Attack.landtick >= tick - Config.getint("Misc", "attactive"))
+        if user.access < (Config.getint("Access",  "hc") if "hc" in Config.options("Access") else 1000): # Hide attacks until they are active, unless the user has access
+            Q = Q.filter(Attack.landtick <= tick + Config.getint("Misc", "attactive"))
+        Q = Q.filter(Attack.landtick + Attack.waves >= tick) # Hide attacks one tick after the last wave has landed
         Q = Q.order_by(asc(Attack.id))
         attacks = Q.all()
         
@@ -46,7 +48,7 @@ class attack(loadable):
         Q = Q.join(Target.user)
         Q = Q.filter(Planet.active == True)
         Q = Q.filter(Target.user == user)
-        Q = Q.filter(Target.tick >= tick - Config.getint("Misc", "attactive"))
+        Q = Q.filter(Target.tick >= tick - 12) # We shouldn't need any bookings 12 ticks after landing
         Q = Q.order_by(asc(Target.tick), asc(Planet.x), asc(Planet.y), asc(Planet.z))
         
         bookings = []

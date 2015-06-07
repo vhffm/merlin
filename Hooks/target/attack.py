@@ -34,9 +34,11 @@ class attack(loadable):
     access = "half"
     
     @route(r"(?:list)?")
-    def list(self,message,user,params):
+    def list(self, message, user, params):
         Q = session.query(Attack)
-        Q = Q.filter(Attack.landtick >= Updates.current_tick() - Config.getint("Misc", "attactive"))
+        if user.access < (Config.getint("Access",  "hc") if "hc" in Config.options("Access") else 1000): # Hide attacks until they are active, unless the user has access
+            Q = Q.filter(Attack.landtick <= Updates.current_tick() + Config.getint("Misc", "attactive"))
+        Q = Q.filter(Attack.landtick + Attack.waves >= Updates.current_tick()) # Hide attacks one tick after the last wave has landed
         Q = Q.order_by(asc(Attack.id))
         
         replies = []
@@ -47,12 +49,15 @@ class attack(loadable):
         message.reply(reply)
     
     @route(r"(?:show\s+)?(\d+)")
-    def show(self,message,user,params):
+    def show(self, message, user, params):
         id = params.group(1)
         attack = Attack.load(id)
         
         if attack is None:
             message.alert("No attack exists with id %s" %(id))
+            return
+        if user.access < (Config.getint("Access",  "hc") if "hc" in Config.options("Access") else 1000) and attack.landtick > Updates.current_tick() + Config.getint("Misc", "attactive"):
+            message.alert("Attack %s is not open yet" %(id))
             return
         
         message.reply(str(attack))
