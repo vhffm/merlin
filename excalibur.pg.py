@@ -1305,7 +1305,7 @@ def find1man(max_age):
     # Can't use ORM fully here because intel is not shared
     # This will find any new 1-man alliances
     t_start = time.time()
-    results = session.query(Alliance, Planet).select_from(Alliance).filter(Alliance.age <= max_age, Alliance.members == 1).join(Planet, and_(Planet.score == Alliance.score_total, Planet.value == Alliance.value_total, Planet.size == Alliance.size)).all()
+    results = session.query(Alliance, Planet).select_from(Alliance).filter(Alliance.age <= max_age, Alliance.members == 1, Alliance.active == True).join(Planet, and_(Planet.score == Alliance.score_total, Planet.value == Alliance.value_total, Planet.size == Alliance.size)).all()
     for a, p in results:
         count = 0
         for ta, tp in results:
@@ -1351,7 +1351,11 @@ if __name__ == "__main__":
         closereqs(planet_tick)
         parsescans(oldtick)
         clean_cache()
-        find1man(planet_tick-oldtick)
+        # Every 100 ticks check for missing 1-man alliances
+        if planet_tick % 100 == 0:
+            find1man(1177)
+        else:
+            find1man(planet_tick-oldtick)
     
     # Add a newline at the end
     excaliburlog("\n")
