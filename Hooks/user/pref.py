@@ -111,7 +111,7 @@ class pref(loadable):
                         reply += " email=%s"%(val)
             if opt == "phone":
                 if val in self.nulls:
-                    user.phone = ""
+                    user.phone = None
                     reply += " phone=None"
                 else:
                     user.phone = val
