@@ -28,6 +28,7 @@ from Core.loadable import loadable, route
 
 class paranoidcunts(loadable):
     """List members who are have not set their phone number properly. Optionally sanity-checks phone numbers."""
+    alias = "nophone"
     usage = " [galmates] [check] [noemail]"
     access = 1 # Admin
     
