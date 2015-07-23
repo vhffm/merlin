@@ -78,7 +78,7 @@ or the relevant documentation for your OS/Distro.
 
 For merlin your database needs to be in UTF-8 encoding          
 		
-	CREATE DATABASE <your_database_name> WITH ENCODING = 'UTF8';
+	CREATE DATABASE <your_database_name> ENCODING = 'UTF8' TEMPLATE template0;
 
 with client encoding LATIN1
 		
