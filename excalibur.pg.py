@@ -428,7 +428,7 @@ def ticker(alt=False):
                 if alt:
                     excaliburlog("Something is very, very wrong...")
                 else:
-                    ticker(True)
+                    ticker(planet_tick-1)
                 continue
     
     ##      # Uncomment this line to allow ticking on the same data for debug
@@ -1299,11 +1299,17 @@ def ticker(alt=False):
 
     if not alt:
         parse_userfeed(userfeed)
-    t2=time.time()-t1
-    excaliburlog("Parsed User Feed in %.3f seconds" % (t2,))
+        t2=time.time()-t1
+        excaliburlog("Parsed User Feed in %.3f seconds" % (t2,))
 
-    t1=time.time()-t_start
-    excaliburlog("Total time taken: %.3f seconds" % (t1,))
+    if alt and planet_tick < alt:
+        t1=time.time()-t_start
+        excaliburlog("Total time taken: %.3f seconds\n" % (t1,))
+        ticker(alt)
+    else:
+        t1=time.time()-t_start
+        excaliburlog("Total time taken: %.3f seconds\n" % (t1,))
+
     return planet_tick
 
 
