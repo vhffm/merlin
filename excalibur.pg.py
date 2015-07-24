@@ -55,9 +55,14 @@ class DefaultErrorHandler(urllib2.HTTPDefaultErrorHandler):
         result.status = code
         return result 
 
-def push_message(bot, command, text):
+def push_message(bot, command, **kwargs):
 # Robocop message pusher
-    line = "%s text=%s" % (command, "!#!" + text.replace(" ", "!#!"))
+    args = [command]
+    for k in kwargs:
+        if k in ["text", "notice"]:
+            kwargs[k] = "!#!" + kwargs[k].replace(" ", "!#!")
+        args += ["%s=%s" % (k, kwargs[k])]
+    line = " ".join(args)
     port = bot.getint("Misc", "robocop")
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.settimeout(30)
@@ -414,7 +419,7 @@ def ticker(alt=False):
                 if planet_tick < last_tick - 5:
                     excaliburlog("Looks like a new round. Giving up.")
                     for bot in bots:
-                        push_message(bot, "adminmsg", "The current tick appears to be %s, but I've seen tick %s. Has a new round started?" % (planet_tick, last_tick))
+                        push_message(bot, "adminmsg", text="The current tick appears to be %s, but I've seen tick %s. Has a new round started?" % (planet_tick, last_tick))
                     return False
                 excaliburlog("Stale ticks found, sleeping")
                 time.sleep(60)
