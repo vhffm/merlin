@@ -90,11 +90,11 @@ def get_dumps(last_tick, alt=False, useragent=None):
         if planets.status == 304:
             excaliburlog("Dump files not modified. Waiting...")
             time.sleep(60)
-            return (False, False, False)
+            return (False, False, False, False)
         else:
             excaliburlog("Error: %s" % planets.status)
             time.sleep(120)
-            return (False, False, False)
+            return (False, False, False, False)
     except AttributeError:
         pass
 
@@ -196,7 +196,6 @@ def parse_userfeed(userfeed):
         category = category[1:-1]
         text = text[1:-1]
         f = Feed(tick=tick, category=category, text=text)
-### Idea: 3 levels of news. None, Some (members, alliance), More (add member gals, creports), All (everything - spammy)
 
         if category == "Planet Ranking":
             # "TAKIYA GENJI of SUZURAN (3:2:7) is now rank 278 (formerly rank 107)"

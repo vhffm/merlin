@@ -1171,7 +1171,7 @@ class Feed(Base):
             else:
                 return Config.get("URL", "viewnews") % news_id
         else:
-            self.text
+            return self.text
 
     @staticmethod
     def filter(tick=None, category=None, type=None, id=None, limit=10):
