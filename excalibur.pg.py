@@ -70,7 +70,6 @@ def get_dumps(last_tick, alt=False, useragent=None):
        purl = Config.get("URL", "alt_plan") % (last_tick+1)
        gurl = Config.get("URL", "alt_gal") % (last_tick+1)
        aurl = Config.get("URL", "alt_ally") % (last_tick+1)
-       furl = Config.get("URL", "alt_feed") % (last_tick+1)
     else:
        purl = Config.get("URL", "planets")
        gurl = Config.get("URL", "galaxies")
@@ -107,9 +106,12 @@ def get_dumps(last_tick, alt=False, useragent=None):
         req = urllib2.Request(aurl)
         req.add_header('User-Agent', useragent)
         alliances = opener.open(req)
-        req = urllib2.Request(furl)
-        req.add_header('User-Agent', useragent)
-        userfeed = opener.open(req)
+        if not alt:
+            req = urllib2.Request(furl)
+            req.add_header('User-Agent', useragent)
+            userfeed = opener.open(req)
+        else:
+            userfeed = None
     except Exception, e:
         excaliburlog("Failed gathering dump files.\n%s" % (str(e),))
         time.sleep(300)
@@ -158,20 +160,23 @@ def checktick(planets, galaxies, alliances, userfeed):
     alliances.readline();alliances.readline();alliances.readline();alliances.readline();
 
     # As above
-    userfeed.readline();userfeed.readline();userfeed.readline();
-    tick=userfeed.readline()
-    m=re.search(r"tick:\s+(\d+)",tick,re.I)
-    if not m:
-        excaliburlog("Invalid tick: '%s'" % (tick,))
-        time.sleep(120)
-        return False
-    userfeed_tick=int(m.group(1))
-    excaliburlog("UserFeed dump for tick %s" % (userfeed_tick,))
-    userfeed.readline();userfeed.readline();userfeed.readline();userfeed.readline();
+    if userfeed:
+        userfeed.readline();userfeed.readline();userfeed.readline();
+        tick=userfeed.readline()
+        m=re.search(r"tick:\s+(\d+)",tick,re.I)
+        if not m:
+            excaliburlog("Invalid tick: '%s'" % (tick,))
+            time.sleep(120)
+            return False
+        userfeed_tick=int(m.group(1))
+        excaliburlog("UserFeed dump for tick %s" % (userfeed_tick,))
+        userfeed.readline();userfeed.readline();userfeed.readline();userfeed.readline();
+    else:
+        userfeed_tick = "N/A"
 
     # Check the ticks of the dumps are all the same and that it's
     #  greater than the previous tick, i.e. a new tick
-    if not (planet_tick == galaxy_tick  == alliance_tick == userfeed_tick):
+    if not ((planet_tick == galaxy_tick == alliance_tick) and ((not userfeed) or planet_tick == userfeed_tick)):
         excaliburlog("Varying ticks found, sleeping\nPlanet: %s, Galaxy: %s, Alliance: %s, UserFeed: %s" % (planet_tick,galaxy_tick,alliance_tick,userfeed_tick))
         time.sleep(30)
         return False
@@ -383,22 +388,24 @@ def ticker(alt=False):
                 pf = open("dumps/%s/planet_listing.txt" % (last_tick+1,), "w+")
                 gf = open("dumps/%s/galaxy_listing.txt" % (last_tick+1,), "w+")
                 af = open("dumps/%s/alliance_listing.txt" % (last_tick+1,), "w+")
-                uf = open("dumps/%s/user_feed.txt" % (last_tick+1,), "w+")
                 # Copy dump contents
                 shutil.copyfileobj(planets, pf)
                 shutil.copyfileobj(galaxies, gf)
                 shutil.copyfileobj(alliances, af)
-                shutil.copyfileobj(userfeed, uf)
                 # Return to the start of the file
                 pf.seek(0)
                 gf.seek(0)
                 af.seek(0)
-                uf.seek(0)
                 # Swap pointers
                 planets = pf
                 galaxies = gf
                 alliances = af
-                userfeed = uf
+                # Only save userfeed if it's fresh
+                if userfeed:
+                    uf = open("dumps/%s/user_feed.txt" % (last_tick+1,), "w+")
+                    shutil.copyfileobj(userfeed, uf)
+                    uf.seek(0)
+                    userfeed = uf
     
             planet_tick = checktick(planets, galaxies, alliances, userfeed)
             if not planet_tick:
