@@ -226,8 +226,12 @@ def parse_userfeed(userfeed):
             f.alliance2_id = alliance.id if alliance else None
             alliance = Alliance.load(m.group(3))
             f.alliance3_id = alliance.id if alliance else None
-            for prefix in prefixes:
-                session.execute(text("UPDATE %sintel SET alliance_id = %s WHERE alliance_id = %s or alliance_id = %s;" % (prefix, f.alliance3_id, f.alliance2_id, f.alliance1_id)))
+            if f.alliance3_id:
+                for prefix in prefixes:
+                    if f.alliance1_id:
+                        session.execute(text("UPDATE %sintel SET alliance_id = %s WHERE alliance_id = %s;" % (prefix, f.alliance3_id, f.alliance1_id)))
+                    if f.alliance2_id:
+                        session.execute(text("UPDATE %sintel SET alliance_id = %s WHERE alliance_id = %s;" % (prefix, f.alliance3_id, f.alliance2_id)))
         elif category == "Relation Change":
             # "Ultores has declared war on Conspiracy !"
             # "Ultores has decided to end its NAP with NewDawn."
