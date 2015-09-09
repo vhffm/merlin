@@ -194,32 +194,32 @@ def parse_userfeed(userfeed):
     for line in userfeed:
         if "01000010011011000110000101101101011001010010000001010111011010010110110001101100" in line:
             break
-        [tick, category, text] = decode(line).strip().split("\t")
+        [tick, category, content] = decode(line).strip().split("\t")
         tick = int(tick)
         if tick <= last_tick:
             continue
         category = category[1:-1]
-        text = text[1:-1]
-        f = Feed(tick=tick, category=category, text=text)
+        content = content[1:-1]
+        f = Feed(tick=tick, category=category, text=content)
 
         if category == "Planet Ranking":
             # "TAKIYA GENJI of SUZURAN (3:2:7) is now rank 278 (formerly rank 107)"
-            m = re.match(r"(.*) \((\d+):(\d+):(\d+)\)", text)
+            m = re.match(r"(.*) \((\d+):(\d+):(\d+)\)", content)
             ph = PlanetHistory.load(m.group(2), m.group(3), m.group(4), tick)
             f.planet_id = ph.id if ph else None
         elif category == "Galaxy Ranking":
             # "4:7 ("Error we only have 12 planets") has taken over rank 1 (formerly rank 2)"
-            m = re.match(r"^\s*(\d+):(\d+)", text)
+            m = re.match(r"^\s*(\d+):(\d+)", content)
             gh = GalaxyHistory.load(m.group(1), m.group(2), tick)
             f.galaxy_id = gh.id if gh else None
         elif category == "Alliance Ranking":
             # "p3nguins has taken over rank 1 (formerly rank 2)"
-            m = re.match(r"(.*) has taken", text)
+            m = re.match(r"(.*) has taken", content)
             alliance = Alliance.load(m.group(1))
             f.alliance1_id = alliance.id if alliance else None
         elif category == "Alliance Merging":
             # "The alliances "HEROES" and "TRAITORS" have merged to form "TRAITORS"."
-            m = re.match(r"The alliances \"(.*)\" and \"(.*)\" have merged to form \"(.*)\"", text)
+            m = re.match(r"The alliances \"(.*)\" and \"(.*)\" have merged to form \"(.*)\"", content)
             alliance = Alliance.load(m.group(1))
             f.alliance1_id = alliance.id if alliance else None
             alliance = Alliance.load(m.group(2))
@@ -237,12 +237,12 @@ def parse_userfeed(userfeed):
             # "Ultores has decided to end its NAP with NewDawn."
             # "Faceless and Ultores have confirmed they have formed a non-aggression pact."
             # "ODDR's war with RainbowS has expired."
-            m = re.match(r"(.*) has declared war on (.*) ?!", text)
+            m = re.match(r"(.*) has declared war on (.*) ?!", content)
             if m:
                 dec_war = True
             else:
-                m = re.match(r"(.*) and (.*) have confirmed .*", text) or re.match(r"(.*) has decided to end its .* with (.*).", text)  or \
-                    re.match(r"(.*)'s war with (.*) has expired.", text)
+                m = re.match(r"(.*) and (.*) have confirmed .*", content) or re.match(r"(.*) has decided to end its .* with (.*).", content)  or \
+                    re.match(r"(.*)'s war with (.*) has expired.", content)
                 dec_war = False
 
             if m:
@@ -257,11 +257,11 @@ def parse_userfeed(userfeed):
                     w = War(start_tick=tick, end_tick=tick+72, alliance1_id=f.alliance1_id or None, alliance2_id=f.alliance2_id or None)
                     session.add(w)
             else:
-                excaliburlog("Unrecognised Relation Change: '%s'" % (text,))
+                excaliburlog("Unrecognised Relation Change: '%s'" % (content,))
         elif category == "Anarchy":
             # "laxer1013 of SchoolsOut (3:3:11) has exited anarchy."
             # "Nandos Skank of Chicken on the Phone (6:7:4) has entered anarchy until tick 192."
-            m = re.match(r"(.*) \((\d+):(\d+):(\d+)\) has (entered|exited) anarchy(?: until tick (\d+).)?", text)
+            m = re.match(r"(.*) \((\d+):(\d+):(\d+)\) has (entered|exited) anarchy(?: until tick (\d+).)?", content)
             p = PlanetHistory.load(m.group(2), m.group(3), m.group(4), tick)
             if not p or "%s of %s" % (p.rulername, p.planetname) != m.group(1):
                 p = PlanetHistory.load(m.group(2), m.group(3), m.group(4), tick+1)
