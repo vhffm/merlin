@@ -80,10 +80,6 @@ For merlin your database needs to be in UTF-8 encoding
 		
 	CREATE DATABASE <your_database_name> ENCODING = 'UTF8' TEMPLATE template0;
 
-with client encoding LATIN1
-		
-	ALTER DATABASE <your_database_name> SET client_encoding='LATIN1';
-    
 Preparing merlin
 ----------------------------
 Inspect and modify merlin.cfg in an editor as required.

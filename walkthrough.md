@@ -46,7 +46,6 @@ Start the PostgreSQL client
 Create the database and user. You'll probably want to choose a different password.
 
     CREATE DATABASE merlin ENCODING = 'UTF8' TEMPLATE template0;
-    ALTER DATABASE merlin SET client_encoding='LATIN1';
     CREATE USER merlin WITH PASSWORD 'password';
     GRANT ALL PRIVILEGES ON DATABASE merlin TO merlin;
     \q
