@@ -28,7 +28,7 @@ from smtplib import SMTP, SMTPException, SMTPSenderRefused, SMTPRecipientsRefuse
 from ssl import SSLError
 
 CRLF = "\r\n"
-encoding = "latin1"
+encoding = "UTF8"
 
 def decode(text):
     # Converts strings to Unicode
