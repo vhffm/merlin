@@ -5,6 +5,7 @@ from Core.maps import Updates
 from Core.paconf import PA
  
 class bonus(loadable):
+    """Calculates upgrade bonus for a given tick, or for the current tick."""
     usage = " [tick]"
  
     @route(r"(\d+)?")

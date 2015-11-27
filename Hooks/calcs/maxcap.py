@@ -23,6 +23,7 @@ from Core.maps import Planet
 from Core.loadable import loadable, route
 
 class maxcap(loadable):
+    """Calculates the maximum roid capture rate for a given number of roids or a specified planet. Optionally specify attacker co-ordinates."""
     usage = " (<total roids>|<x:y:z> [a:b:c])"
     
     @route(r"(\d+)\s*$")
@@ -56,10 +57,14 @@ class maxcap(loadable):
     
     def execute(self, message, target, attacker):
         reply = ""
+        if attacker:
+            att_str = "%s:%s:%s" % (attacker.x, attacker.y, attacker.z)
+        else:
+            att_str = "None (set using !pref or add to the end of the command)"
         total = 0
         for i in range(1,5):
             cap = target.maxcap(attacker)
             total += cap
             reply+="Wave %d: %d (%d), " % (i,cap,total,)
             target.size -= cap
-        message.reply("Caprate: %s%% %s"%(int(target.caprate(attacker)*100),reply.strip(', ')))
+        message.reply("Caprate: %s%% %s Using attacker: %s"%(int(target.caprate(attacker)*100),reply.strip(', '),att_str))
