@@ -86,6 +86,10 @@ Create log files
 
     touch dumplog.txt errorlog.txt arthurlog.txt scanlog.txt
 
+Checkout the branch you want. Replace source_branch with any branch or tag name. For more details see [Branches](https://github.com/d7415/merlin/wiki/Branches)
+
+    git checkout source_branch
+
 Create a branch for your bot
 
     git checkout -b my_branch
