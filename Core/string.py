@@ -35,7 +35,10 @@ def decode(text):
     if type(text) is unicode:
         return text
     elif type(text) is str:
-        return text.decode(encoding)
+        try:
+            return text.decode(encoding)
+        except UnicodeError:
+            return text.decode("latin1")
     else:
         raise UnicodeError
 
@@ -44,7 +47,10 @@ def encode(text):
     if type(text) is str:
         return text
     elif type(text) is unicode:
-        return text.encode(encoding)
+        try:
+            return text.encode(encoding)
+        except UnicodeError:
+            return text.encode("latin1")
     else:
         raise UnicodeError
 
