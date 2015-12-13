@@ -455,42 +455,45 @@ def ticker(alt=False):
     
             # Insert the data to the temporary tables
             # Planets
-            session.execute(planet_temp.insert(), [{
-                                                    "x": int(p[0]),
-                                                    "y": int(p[1]),
-                                                    "z": int(p[2]),
-                                                    "planetname": p[3].strip("\""),
-                                                    "rulername": p[4].strip("\""),
-                                                    "race": p[5],
-                                                    "size": int(p[6] or 0),
-                                                    "score": int(p[7] or 0),
-                                                    "value": int(p[8] or 0),
-                                                    "xp": int(p[9] or 0),
-                                                   } for p in [decode(line).strip().split("\t") for line in planets][:-1]]) if planets else None
+            tmplist = [{
+                        "x": int(p[0]),
+                        "y": int(p[1]),
+                        "z": int(p[2]),
+                        "planetname": p[3].strip("\""),
+                        "rulername": p[4].strip("\""),
+                        "race": p[5],
+                        "size": int(p[6] or 0),
+                        "score": int(p[7] or 0),
+                        "value": int(p[8] or 0),
+                        "xp": int(p[9] or 0),
+                       } for p in [decode(line).strip().split("\t") for line in planets][:-1]] if planets else None
+            session.execute(planet_temp.insert(), tmplist) if tmplist else None
             # Galaxies
-            session.execute(galaxy_temp.insert(), [{
-                                                    "x": int(g[0]),
-                                                    "y": int(g[1]),
-                                                    "name": g[2].strip("\""),
-                                                    "size": int(g[3] or 0),
-                                                    "score": int(g[4] or 0),
-                                                    "value": int(g[5] or 0),
-                                                    "xp": int(g[6] or 0),
-                                                   } for g in [decode(line).strip().split("\t") for line in galaxies][:-1]]) if galaxies else None
+            tmplist = [{
+                        "x": int(g[0]),
+                        "y": int(g[1]),
+                        "name": g[2].strip("\""),
+                        "size": int(g[3] or 0),
+                        "score": int(g[4] or 0),
+                        "value": int(g[5] or 0),
+                        "xp": int(g[6] or 0),
+                       } for g in [decode(line).strip().split("\t") for line in galaxies][:-1]] if galaxies else None
+            session.execute(galaxy_temp.insert(), tmplist) if tmplist else None
             # Alliances
-            session.execute(alliance_temp.insert(), [{
-                                                    "score_rank": int(a[0]),
-                                                    "name": a[1].strip("\""),
-                                                    "size": int(a[2] or 0),
-                                                    "members": int(a[3] or 1),
-                                                    "score": int(a[4] or 0),
-                                                    "points": int(a[5] or 0),
-                                                    "score_total": int(a[6] or 0),
-                                                    "value_total": int(a[7] or 0),
-                                                    "size_avg": int(a[2] or 0) / int(a[3] or 1),
-                                                    "score_avg": int(a[4] or 0) / min(int(a[3] or 1), PA.getint("numbers", "tag_count")),
-                                                    "points_avg": int(a[5] or 0) / int(a[3] or 1),
-                                                   } for a in [decode(line).strip().split("\t") for line in alliances][:-1]]) if alliances else None
+            tmplist = [{
+                        "score_rank": int(a[0]),
+                        "name": a[1].strip("\""),
+                        "size": int(a[2] or 0),
+                        "members": int(a[3] or 1),
+                        "score": int(a[4] or 0),
+                        "points": int(a[5] or 0),
+                        "score_total": int(a[6] or 0),
+                        "value_total": int(a[7] or 0),
+                        "size_avg": int(a[2] or 0) / int(a[3] or 1),
+                        "score_avg": int(a[4] or 0) / min(int(a[3] or 1), PA.getint("numbers", "tag_count")),
+                        "points_avg": int(a[5] or 0) / int(a[3] or 1),
+                       } for a in [decode(line).strip().split("\t") for line in alliances][:-1]] if alliances else None
+            session.execute(alliance_temp.insert(), tmplist) if tmplist else None
     
             t2=time.time()-t1
             excaliburlog("Inserted dumps in %.3f seconds" % (t2,))
