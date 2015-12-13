@@ -96,6 +96,10 @@ def get_dumps(last_tick, alt=False, useragent=None):
             excaliburlog("Dump files not modified. Waiting...")
             time.sleep(60)
             return (False, False, False, False)
+        elif planets.status == 404 and last_tick < alt:
+            # Dumps are missing from archive. Check for dumps for next tick
+            excaliburlog("Dump files missing. Looking for newer...")
+            return get_dumps(last_tick+1, alt, useragent)
         else:
             excaliburlog("Error: %s" % planets.status)
             time.sleep(120)
@@ -434,11 +438,13 @@ def ticker(alt=False):
             t1=time.time()
     
             if catchup_enabled and planet_tick > last_tick + 1:
-                if alt:
-                    excaliburlog("Something is very, very wrong...")
-                else:
+                if not alt:
+                    excaliburlog("Found missing ticks. Catching up...")
                     ticker(planet_tick-1)
-                continue
+                    continue
+                if planet_tick > alt:
+                    excaliburlog("Something is very, very wrong...")
+                    continue
     
     ##      # Uncomment this line to allow ticking on the same data for debug
     ##      # planet_tick = last_tick + 1
