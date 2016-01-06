@@ -3,10 +3,12 @@ This won't necessarily result in the best merlin installation ever, but it **sho
 Any improvements or alternative versions are welcome.
 
 ###Starting Point
-Debian Wheezy. In this case, the very bare version found on Chicago VPS.
+Debian Squeeze (6.0). In this case, the very bare version found on Chicago VPS.  
+If you have Wheezy (7.0) or better, you can skip step one and just run `apt-get update` before proceeding.
 
 ###Assumptions
-Running as root, without sudo installed. If you have sudo you can run `sudo -s` to open a root shell.
+Running as root, without sudo installed. If you have sudo you can run `sudo -s` to open a root shell.  
+If you don't like `vi`, feel free to use `nano` or your preferred editor.
 
 ##Step One: Upgrade from Squeeze
     vi /etc/apt/sources.list
