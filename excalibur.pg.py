@@ -55,6 +55,42 @@ class DefaultErrorHandler(urllib2.HTTPDefaultErrorHandler):
         result.status = code
         return result 
 
+class botfile:
+    def __init__(self, page):
+        self.header = {}
+        self.body = []
+
+        # Parse header
+        line = page.readline().strip()
+        while line:
+            [field, value] = line.split(": ",1)
+            if value[0] == "'" and value[-1] == "'":
+                value = value[1:-1]
+            self.header[field] = value
+            line = page.readline().strip()
+
+        if self.header.has_key("Tick"):
+            if self.header["Tick"].isdigit():
+                self.tick = int(self.header["Tick"])
+            else:
+                raise TypeError("Non-numeric tick \"%s\" found." % self.header["Tick"])
+        else:
+            raise TypeError("No tick information found.")
+
+        if not self.header.has_key("Separator"):
+            self.header["Separator"] = "\t"
+
+        if not self.header.has_key("EOF"):
+            self.header["EOF"] = None
+
+        line = page.readline().strip()
+        while line != self.header["EOF"]:
+            self.body.append(line)
+            line = page.readline().strip()
+
+    def __iter__(self):
+        return iter(self.body)
+
 def push_message(bot, command, **kwargs):
 # Robocop message pusher
     args = [command]
@@ -90,18 +126,18 @@ def get_dumps(last_tick, alt=False, useragent=None):
     if useragent:
         req.add_header('User-Agent', useragent)
     opener = urllib2.build_opener(DefaultErrorHandler())
-    planets = opener.open(req)
+    pdump = opener.open(req)
     try:
-        if planets.status == 304:
+        if pdump.status == 304:
             excaliburlog("Dump files not modified. Waiting...")
             time.sleep(60)
             return (False, False, False, False)
-        elif planets.status == 404 and last_tick < alt:
+        elif pdump.status == 404 and last_tick < alt:
             # Dumps are missing from archive. Check for dumps for next tick
             excaliburlog("Dump files missing. Looking for newer...")
             return get_dumps(last_tick+1, alt, useragent)
         else:
-            excaliburlog("Error: %s" % planets.status)
+            excaliburlog("Error: %s" % pdump.status)
             time.sleep(120)
             return (False, False, False, False)
     except AttributeError:
@@ -111,94 +147,63 @@ def get_dumps(last_tick, alt=False, useragent=None):
     try:
         req = urllib2.Request(gurl)
         req.add_header('User-Agent', useragent)
-        galaxies = opener.open(req)
+        gdump = opener.open(req)
         req = urllib2.Request(aurl)
         req.add_header('User-Agent', useragent)
-        alliances = opener.open(req)
+        adump = opener.open(req)
         if not alt:
             req = urllib2.Request(furl)
             req.add_header('User-Agent', useragent)
-            userfeed = opener.open(req)
+            udump = opener.open(req)
         else:
-            userfeed = None
+            udump = None
     except Exception, e:
         excaliburlog("Failed gathering dump files.\n%s" % (str(e),))
         time.sleep(300)
         return (False, False, False, False)
     else:
-        return (planets, galaxies, alliances, userfeed)
+        return (pdump, gdump, adump, udump)
 
 
 def checktick(planets, galaxies, alliances, userfeed):
-    # Skip first three lines of the dump, tick info is on fourth line
-    planets.readline();planets.readline();planets.readline();
-    # Parse the fourth line and check we have a number
-    tick=planets.readline()
-    m=re.search(r"tick:\s+(\d+)",tick,re.I)
-    if not m:
-        excaliburlog("Invalid tick: '%s'" % (tick,))
+    if not planets.tick:
+        excaliburlog("Bad planet dump")
         time.sleep(120)
         return False
-    planet_tick=int(m.group(1))
-    excaliburlog("Planet dump for tick %s" % (planet_tick,))
-    # Skip next four lines; three are junk, next is blank, data starts next
-    planets.readline();planets.readline();planets.readline();planets.readline();
-
-    # As above
-    galaxies.readline();galaxies.readline();galaxies.readline();
-    tick=galaxies.readline()
-    m=re.search(r"tick:\s+(\d+)",tick,re.I)
-    if not m:
-        excaliburlog("Invalid tick: '%s'" % (tick,))
+    excaliburlog("Planet dump for tick %s" % (planets.tick))
+    if not galaxies.tick:
+        excaliburlog("Bad galaxy dump")
         time.sleep(120)
         return False
-    galaxy_tick=int(m.group(1))
-    excaliburlog("Galaxy dump for tick %s" % (galaxy_tick,))
-    galaxies.readline();galaxies.readline();galaxies.readline();galaxies.readline();
-
-    # As above
-    alliances.readline();alliances.readline();alliances.readline();
-    tick=alliances.readline()
-    m=re.search(r"tick:\s+(\d+)",tick,re.I)
-    if not m:
-        excaliburlog("Invalid tick: '%s'" % (tick,))
+    excaliburlog("Galaxy dump for tick %s" % (galaxies.tick))
+    if not alliances.tick:
+        excaliburlog("Bad alliance dump")
         time.sleep(120)
         return False
-    alliance_tick=int(m.group(1))
-    excaliburlog("Alliance dump for tick %s" % (alliance_tick,))
-    alliances.readline();alliances.readline();alliances.readline();alliances.readline();
+    excaliburlog("Alliance dump for tick %s" % (alliances.tick))
 
     # As above
     if userfeed:
-        userfeed.readline();userfeed.readline();userfeed.readline();
-        tick=userfeed.readline()
-        m=re.search(r"tick:\s+(\d+)",tick,re.I)
-        if not m:
-            excaliburlog("Invalid tick: '%s'" % (tick,))
+        if not userfeed.tick:
+            excaliburlog("Bad userfeed dump")
             time.sleep(120)
             return False
-        userfeed_tick=int(m.group(1))
-        excaliburlog("UserFeed dump for tick %s" % (userfeed_tick,))
-        userfeed.readline();userfeed.readline();userfeed.readline();userfeed.readline();
-    else:
-        userfeed_tick = "N/A"
+        excaliburlog("UserFeed dump for tick %s" % (userfeed.tick))
 
     # Check the ticks of the dumps are all the same and that it's
     #  greater than the previous tick, i.e. a new tick
-    if not ((planet_tick == galaxy_tick == alliance_tick) and ((not userfeed) or planet_tick == userfeed_tick)):
-        excaliburlog("Varying ticks found, sleeping\nPlanet: %s, Galaxy: %s, Alliance: %s, UserFeed: %s" % (planet_tick,galaxy_tick,alliance_tick,userfeed_tick))
+    if not ((planets.tick == galaxies.tick == alliances.tick) and ((not userfeed) or planets.tick == userfeed.tick)):
+        excaliburlog("Varying ticks found, sleeping\nPlanet: %s, Galaxy: %s, Alliance: %s, UserFeed: %s" % (planets.tick, galaxies.tick, alliances.tick, userfeed.tick if userfeed else "N/A"))
         time.sleep(30)
         return False
-    return planet_tick
+    return True
 
 
 def parse_userfeed(userfeed):
     global prefixes
     last_tick = session.query(max_(Feed.tick)).scalar() or 0
     for line in userfeed:
-        if "01000010011011000110000101101101011001010010000001010111011010010110110001101100" in line:
-            break
-        [tick, category, content] = decode(line).strip().split("\t")
+        [tick, category, content] = decode(line).strip().split(userfeed.header["Separator"], 2)
         tick = int(tick)
         if tick <= last_tick:
             continue
@@ -382,13 +387,13 @@ def ticker(alt=False):
                 session.close()
                 sys.exit()
     
-            (planets, galaxies, alliances, userfeed) = get_dumps(last_tick, alt, useragent)
-            if not planets:
+            (pdump, gdump, adump, udump) = get_dumps(last_tick, alt, useragent)
+            if not pdump:
                 continue
 
             # Get header information now, as the headers will be lost if we save dumps
-            etag = planets.headers.get("ETag")
-            modified = planets.headers.get("Last-Modified")
+            etag = pdump.headers.get("ETag")
+            modified = pdump.headers.get("Last-Modified")
     
             if savedumps:
                 try:
@@ -401,33 +406,43 @@ def ticker(alt=False):
                 gf = open("dumps/%s/galaxy_listing.txt" % (last_tick+1,), "w+")
                 af = open("dumps/%s/alliance_listing.txt" % (last_tick+1,), "w+")
                 # Copy dump contents
-                shutil.copyfileobj(planets, pf)
-                shutil.copyfileobj(galaxies, gf)
-                shutil.copyfileobj(alliances, af)
+                shutil.copyfileobj(pdump, pf)
+                shutil.copyfileobj(gdump, gf)
+                shutil.copyfileobj(adump, af)
                 # Return to the start of the file
                 pf.seek(0)
                 gf.seek(0)
                 af.seek(0)
                 # Swap pointers
-                planets = pf
-                galaxies = gf
-                alliances = af
-                # Only save userfeed if it's fresh
-                if userfeed:
+                pdump = pf
+                gdump = gf
+                adump = af
+                # Do all of the above for userfeed if present
+                if udump:
                     uf = open("dumps/%s/user_feed.txt" % (last_tick+1,), "w+")
-                    shutil.copyfileobj(userfeed, uf)
+                    shutil.copyfileobj(udump, uf)
                     uf.seek(0)
-                    userfeed = uf
-    
-            planet_tick = checktick(planets, galaxies, alliances, userfeed)
-            if not planet_tick:
+                    udump = uf
+
+            # Parse botfile headers
+            try:
+                planets   = botfile(pdump)
+                galaxies  = botfile(gdump)
+                alliances = botfile(adump)
+                userfeed = botfile(udump) if udump else None
+            except TypeError as e:
+                excaliburlog("Error: %s" % e)
+                time.sleep(60)
+                continue
+
+            if not checktick(planets, galaxies, alliances, userfeed):
                 continue
     
-            if not planet_tick > last_tick:
-                if planet_tick < last_tick - 5:
+            if not planets.tick > last_tick:
+                if planets.tick < last_tick - 5:
                     excaliburlog("Looks like a new round. Giving up.")
                     for bot in bots:
-                        push_message(bot, "adminmsg", text="The current tick appears to be %s, but I've seen tick %s. Has a new round started?" % (planet_tick, last_tick))
+                        push_message(bot, "adminmsg", text="The current tick appears to be %s, but I've seen tick %s. Has a new round started?" % (planets.tick, last_tick))
                     return False
                 excaliburlog("Stale ticks found, sleeping")
                 time.sleep(60)
@@ -437,22 +452,22 @@ def ticker(alt=False):
             excaliburlog("Loaded dumps from webserver in %.3f seconds" % (t2,))
             t1=time.time()
     
-            if catchup_enabled and planet_tick > last_tick + 1:
+            if catchup_enabled and planets.tick > last_tick + 1:
                 if not alt:
                     excaliburlog("Found missing ticks. Catching up...")
-                    ticker(planet_tick-1)
+                    ticker(planets.tick-1)
                     continue
-                if planet_tick > alt:
+                if planets.tick > alt:
                     excaliburlog("Something is very, very wrong...")
                     continue
     
     ##      # Uncomment this line to allow ticking on the same data for debug
     ##      # planet_tick = last_tick + 1
     
-            tick = bindparam("tick",planet_tick)
+            tick = bindparam("tick",planets.tick)
     
             # Insert a record of the tick and a timestamp generated by SQLA
-            session.execute(Updates.__table__.insert().values(id=planet_tick, etag=etag, modified=modified))
+            session.execute(Updates.__table__.insert().values(id=planets.tick, etag=etag, modified=modified))
     
             # Empty out the temp tables
             session.execute(galaxy_temp.delete())
@@ -472,7 +487,7 @@ def ticker(alt=False):
                         "score": int(p[7] or 0),
                         "value": int(p[8] or 0),
                         "xp": int(p[9] or 0),
-                       } for p in [decode(line).strip().split("\t") for line in planets][:-1]] if planets else None
+                       } for p in [decode(line).strip().split(planets.header["Separator"]) for line in planets]] if planets else None
             session.execute(planet_temp.insert(), tmplist) if tmplist else None
             # Galaxies
             tmplist = [{
@@ -483,7 +498,7 @@ def ticker(alt=False):
                         "score": int(g[4] or 0),
                         "value": int(g[5] or 0),
                         "xp": int(g[6] or 0),
-                       } for g in [decode(line).strip().split("\t") for line in galaxies][:-1]] if galaxies else None
+                       } for g in [decode(line).strip().split(galaxies.header["Separator"]) for line in galaxies]] if galaxies else None
             session.execute(galaxy_temp.insert(), tmplist) if tmplist else None
             # Alliances
             tmplist = [{
@@ -498,7 +513,7 @@ def ticker(alt=False):
                         "size_avg": int(a[2] or 0) / int(a[3] or 1),
                         "score_avg": int(a[4] or 0) / min(int(a[3] or 1), PA.getint("numbers", "tag_count")),
                         "points_avg": int(a[5] or 0) / int(a[3] or 1),
-                       } for a in [decode(line).strip().split("\t") for line in alliances][:-1]] if alliances else None
+                       } for a in [decode(line).strip().split(alliances.header["Separator"]) for line in alliances]] if alliances else None
             session.execute(alliance_temp.insert(), tmplist) if tmplist else None
     
             t2=time.time()-t1
@@ -1320,7 +1335,7 @@ def ticker(alt=False):
         t2=time.time()-t1
         excaliburlog("Parsed User Feed in %.3f seconds" % (t2,))
 
-    if alt and planet_tick < alt:
+    if alt and planets.tick < alt:
         t1=time.time()-t_start
         excaliburlog("Total time taken: %.3f seconds\n" % (t1,))
         ticker(alt)
@@ -1328,7 +1343,7 @@ def ticker(alt=False):
         t1=time.time()-t_start
         excaliburlog("Total time taken: %.3f seconds\n" % (t1,))
 
-    return planet_tick
+    return planets.tick
 
 
 def find1man(max_age):
