@@ -202,10 +202,11 @@ def checktick(planets, galaxies, alliances, userfeed):
 def parse_userfeed(userfeed):
     global prefixes
     last_tick = session.query(max_(Feed.tick)).scalar() or 0
+    recents = session.query(Feed).filter_by(tick=last_tick).all()
     for line in userfeed:
         [tick, category, content] = decode(line).strip().split(userfeed.header["Separator"], 2)
         tick = int(tick)
-        if tick <= last_tick:
+        if tick < last_tick:
             continue
         category = category[1:-1]
         content = content[1:-1]
@@ -283,7 +284,14 @@ def parse_userfeed(userfeed):
             pass
         else:
             excaliburlog("Unknown User Feed Item Type: '%s'" % (category,))
-        session.add(f)
+        if tick == last_tick:
+            for rf in recents:
+                if f.category == rf.category and f.text == rf.text:
+                    break
+            else:
+                session.add(f)
+        else:
+            session.add(f)
     session.commit()
 
 
