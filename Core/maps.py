@@ -664,6 +664,21 @@ class Planet(Base):
     
     def __str__(self):
         retstr="%s:%s:%s (%s) '%s' of '%s' " % (self.x,self.y,self.z,self.race,self.rulername,self.planetname)
+        if self.special:
+            flags = []
+            for flag in self.special.split():
+                if flag == "P":
+                    flag = "Prot"
+                if flag == "D":
+                    flag = "Del"
+                if flag == "R":
+                    flag = "Reset"
+                if flag == "V":
+                    flag = "Vac"
+                if flag == "C":
+                    flag = "Closed"
+                flags.append(flag)
+            retstr+="(%s) " % (", ".join(flags))
         retstr+="Score: %s (%s) " % (self.score,self.score_rank)
         retstr+="Value: %s (%s) " % (self.value,self.value_rank)
         retstr+="Size: %s (%s) " % (self.size,self.size_rank)
