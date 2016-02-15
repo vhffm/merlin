@@ -536,6 +536,7 @@ class Planet(Base):
     score = Column(Integer)
     value = Column(Integer)
     xp = Column(Integer)
+    special = Column(String(255))
     ratio = Column(Float)
     size_rank = Column(Integer)
     score_rank = Column(Integer)
@@ -1232,7 +1233,8 @@ planet_temp = Table('planet_temp', Base.metadata,
     Column('size', Integer),
     Column('score', Integer),
     Column('value', Integer),
-    Column('xp', Integer))
+    Column('xp', Integer),
+    Column('special', String(255)))
 alliance_temp = Table('alliance_temp', Base.metadata,
     Column('id', Integer),
     Column('name', String(255), primary_key=True),

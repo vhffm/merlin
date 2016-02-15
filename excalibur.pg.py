@@ -495,6 +495,7 @@ def ticker(alt=False):
                         "score": int(p[7] or 0),
                         "value": int(p[8] or 0),
                         "xp": int(p[9] or 0),
+                        "special": p[10].strip("\""),
                        } for p in [decode(line).strip().split(planets.header["Separator"]) for line in planets]] if planets else None
             session.execute(planet_temp.insert(), tmplist) if tmplist else None
             # Galaxies
@@ -984,7 +985,7 @@ def ticker(alt=False):
                                       age = COALESCE(p.age, 0) + 1,
                                       x = t.x, y = t.y, z = t.z,
                                       planetname = t.planetname, rulername = t.rulername, race = t.race,
-                                      size = t.size, score = t.score, value = t.value, xp = t.xp,
+                                      size = t.size, score = t.score, value = t.value, xp = t.xp, special = t.special,
                                       ratio = CASE WHEN (t.value != 0) THEN 10000.0 * t.size / t.value ELSE 0 END,
                                  """ + ((
                                  """
