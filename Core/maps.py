@@ -669,14 +669,16 @@ class Planet(Base):
             for flag in self.special.split():
                 if flag == "P":
                     flag = "Prot"
-                if flag == "D":
+                elif flag == "D":
                     flag = "Del"
-                if flag == "R":
+                elif flag == "R":
                     flag = "Reset"
-                if flag == "V":
+                elif flag == "V":
                     flag = "Vac"
-                if flag == "C":
+                elif flag == "C":
                     flag = "Closed"
+                elif flag == "E":
+                    flag = "Exile"
                 flags.append(flag)
             retstr+="(%s) " % (", ".join(flags))
         retstr+="Score: %s (%s) " % (self.score,self.score_rank)
