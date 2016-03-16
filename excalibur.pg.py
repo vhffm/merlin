@@ -264,7 +264,7 @@ def parse_userfeed(userfeed):
                     f.alliance2_id = a2.id
                 if dec_war and a1 and a2:
                     # War XP
-                    w = War(start_tick=tick, end_tick=tick+72, alliance1_id=f.alliance1_id or None, alliance2_id=f.alliance2_id or None)
+                    w = War(start_tick=tick, end_tick=tick+PA.getint("numbers", "war_length"), alliance1_id=f.alliance1_id or None, alliance2_id=f.alliance2_id or None)
                     session.add(w)
             else:
                 excaliburlog("Unrecognised Relation Change: '%s'" % (content,))
