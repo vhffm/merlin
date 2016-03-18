@@ -1173,7 +1173,7 @@ Alliance.history_loader = relation(AllianceHistory, backref=backref('current', l
 class Feed(Base):
     __tablename__ = 'feed'
     id = Column(Integer, primary_key=True)
-    tick = Column(Integer, ForeignKey(Updates.id, ondelete='cascade'))
+    tick = Column(Integer)
     category = Column(String(255), index=True)
     alliance1_id = Column(Integer, ForeignKey(Alliance.id, ondelete='set null'), default=None, index=True)
     alliance2_id = Column(Integer, ForeignKey(Alliance.id, ondelete='set null'), default=None, index=True)
