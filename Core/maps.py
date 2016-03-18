@@ -732,6 +732,7 @@ class PlanetHistory(Base):
     score = Column(Integer)
     value = Column(Integer)
     xp = Column(Integer)
+    special = Column(String(255))
     ratio = Column(Float)
     size_rank = Column(Integer)
     score_rank = Column(Integer)
