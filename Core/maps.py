@@ -666,7 +666,7 @@ class Planet(Base):
         retstr="%s:%s:%s (%s) '%s' of '%s' " % (self.x,self.y,self.z,self.race,self.rulername,self.planetname)
         if self.special:
             flags = []
-            for flag in self.special.split():
+            for flag in self.special.split(","):
                 if flag == "P":
                     flag = "Prot"
                 elif flag == "D":
