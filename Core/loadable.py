@@ -193,7 +193,7 @@ class loadable(_base):
             session.add(Command(command_prefix = message.get_prefix(),
                                 command = self.name,
                                 subcommand = subcommand,
-                                command_parameters = message.get_msg()[len(m.group(1))+1:].strip(),
+                                command_parameters = self.hide_passwords(self.name, message.get_msg()[len(m.group(1))+1:].strip()),
                                 nick = message.get_nick(),
                                 username = "" if user is True else user.name,
                                 hostname = message.get_hostmask(),
@@ -265,6 +265,14 @@ class loadable(_base):
                 continue
             param_dict[a[0].lower()]=a[1]
         return param_dict
+
+    def hide_passwords(self, command, params):
+        if command in ["auth", "letmein"]:
+            return " ".join(["???"]*(len(params.split())))
+        elif command == "pref":
+            return re.sub("password=[^ ]+", "password=???", params)
+        else:
+            return params
     
 
 # ########################################################################### #
