@@ -1975,7 +1975,9 @@ class DevScan(Base):
         if level==3:
             return "150 constructions"
         if level==4:
-            return "250 constructions"
+            return "200 constructions"
+        if level==5:
+            return "300 constructions"
     
     def hulls_str(self):
         level = self.hulls
