@@ -28,7 +28,7 @@ from Core.paconf import PA
 from Core.string import decode, excaliburlog, errorlog, CRLF
 from Core.db import true, false, session
 from Core.maps import Updates, galpenis, apenis, Scan, Planet, Alliance, PlanetHistory, GalaxyHistory, Feed, War
-from Core.maps import galaxy_temp, planet_temp, alliance_temp, planet_new_id_search, planet_old_id_search
+from Core.maps import galaxy_temp, planet_temp, alliance_temp
 from Hooks.scans.parser import parse
 from ConfigParser import ConfigParser as CP
 
@@ -485,17 +485,18 @@ def ticker(alt=False):
             # Insert the data to the temporary tables
             # Planets
             tmplist = [{
-                        "x": int(p[0]),
-                        "y": int(p[1]),
-                        "z": int(p[2]),
-                        "planetname": p[3].strip("\""),
-                        "rulername": p[4].strip("\""),
-                        "race": p[5],
-                        "size": int(p[6] or 0),
-                        "score": int(p[7] or 0),
-                        "value": int(p[8] or 0),
-                        "xp": int(p[9] or 0),
-                        "special": p[10].strip("\""),
+                        "id": p[0].strip("\""),
+                        "x": int(p[1]),
+                        "y": int(p[2]),
+                        "z": int(p[3]),
+                        "planetname": p[4].strip("\""),
+                        "rulername": p[5].strip("\""),
+                        "race": p[6],
+                        "size": int(p[7] or 0),
+                        "score": int(p[8] or 0),
+                        "value": int(p[9] or 0),
+                        "xp": int(p[10] or 0),
+                        "special": p[11].strip("\""),
                        } for p in [decode(line).strip().split(planets.header["Separator"]) for line in planets]] if planets else None
             session.execute(planet_temp.insert(), tmplist) if tmplist else None
             # Galaxies
@@ -817,115 +818,14 @@ def ticker(alt=False):
     # ##############################    PLANETS    ############################## #
     # ########################################################################### #
     
-            # Update the newly dumped data with IDs from the current data
-            #  based on an ruler-,planet-name match in the two tables (and active=True)
-            session.execute(text("""UPDATE planet_temp AS t SET
-                                      id = p.id
-                                    FROM (SELECT id, rulername, planetname FROM planet WHERE active = :true) AS p
-                                      WHERE t.rulername = p.rulername AND t.planetname = p.planetname
-                                ;""", bindparams=[true]))
-    
-            t2=time.time()-t1
-            excaliburlog("Copy planet ids to temp in %.3f seconds" % (t2,))
-            t1=time.time()
-    
-            while True: #looks are deceiving, this only runs once
-                # This code is designed to match planets whose ruler/planet names
-                #  change, by matching them with new planets using certain criteria
-    
-                def load_planet_id_search():
-                    # If we have any ids in the planet_new_id_search table,
-                    #  match them up with planet_temp using x,y,z
-                    session.execute(text("UPDATE planet_temp SET id = (SELECT id FROM planet_new_id_search WHERE planet_temp.x = planet_new_id_search.x AND planet_temp.y = planet_new_id_search.y AND planet_temp.z = planet_new_id_search.z) WHERE id IS NULL;"))
-                    # Empty out the two search tables
-                    session.execute(planet_new_id_search.delete())
-                    session.execute(planet_old_id_search.delete())
-                    # Insert from the new tick any planets without id
-                    if session.execute(text("INSERT INTO planet_new_id_search SELECT id, x, y, z, planetname, rulername, race, size, score, value, xp FROM planet_temp WHERE planet_temp.id IS NULL;")).rowcount < 1:
-                        return None
-                    # Insert from the previous tick any planets without
-                    #  an equivalent planet from the new tick
-                    if session.execute(text("INSERT INTO planet_old_id_search SELECT id, x, y, z, planetname, rulername, race, size, score, value, xp, vdiff FROM planet WHERE planet.id NOT IN (SELECT id FROM planet_temp WHERE id IS NOT NULL) AND planet.active = :true;", bindparams=[true])).rowcount < 1:
-                        return None
-                    # If either of the two search tables do not have any planets
-                    #  to match moved in (.rowcount() < 1) then return None, else:
-                    return 1
-    
-                # Load in the planets to match against and use the first set of match criterion
-                if load_planet_id_search() is None: break
-                session.execute(text("""UPDATE planet_new_id_search SET id = (
-                                          SELECT id FROM planet_old_id_search WHERE
-                                            planet_old_id_search.x = planet_new_id_search.x AND
-                                            planet_old_id_search.y = planet_new_id_search.y AND
-                                            planet_old_id_search.z = planet_new_id_search.z AND
-                                            planet_old_id_search.race = planet_new_id_search.race AND
-                                            planet_old_id_search.size > 500 AND
-                                            planet_old_id_search.size = planet_new_id_search.size
-                                          );"""))
-                # As above, second set of criterion
-                if load_planet_id_search() is None: break
-                session.execute(text("""UPDATE planet_new_id_search SET id = (
-                                          SELECT id FROM planet_old_id_search WHERE
-                                            planet_old_id_search.x = planet_new_id_search.x AND
-                                            planet_old_id_search.y = planet_new_id_search.y AND
-                                            planet_old_id_search.z = planet_new_id_search.z AND
-                                            planet_old_id_search.race = planet_new_id_search.race AND
-                                            planet_old_id_search.value > 500000 AND
-                                            planet_new_id_search.value BETWEEN
-                                                    planet_old_id_search.value - (2* planet_old_id_search.vdiff) AND 
-                                                    planet_old_id_search.value + (2* planet_old_id_search.vdiff)
-                                          );"""))
-                # Third set of criterion
-                if load_planet_id_search() is None: break
-                session.execute(text("""UPDATE planet_new_id_search SET id = (
-                                          SELECT id FROM planet_old_id_search WHERE
-                                            planet_old_id_search.race = planet_new_id_search.race AND
-                                            planet_old_id_search.size > 500 AND
-                                            planet_old_id_search.size = planet_new_id_search.size AND
-                                            planet_old_id_search.value > 500000 AND
-                                            planet_new_id_search.value BETWEEN
-                                                    planet_old_id_search.value - (2* planet_old_id_search.vdiff) AND
-                                                    planet_old_id_search.value + (2* planet_old_id_search.vdiff)
-                                          );"""))
-                # Fourth set of criterion for smaller planets
-                if load_planet_id_search() is None: break
-                session.execute(text("""UPDATE planet_new_id_search SET id = (
-                                          SELECT id FROM planet_old_id_search WHERE
-                                            planet_old_id_search.x = planet_new_id_search.x AND
-                                            planet_old_id_search.y = planet_new_id_search.y AND
-                                            planet_old_id_search.z = planet_new_id_search.z AND
-                                            planet_old_id_search.race = planet_new_id_search.race AND
-                                            planet_old_id_search.size = planet_new_id_search.size AND
-                                            planet_new_id_search.value BETWEEN
-                                                    planet_old_id_search.value - (2* planet_old_id_search.vdiff) AND
-                                                    planet_old_id_search.value + (2* planet_old_id_search.vdiff)
-                                          );"""))
-                # Fifth set of criterion for planets that half-match
-                if load_planet_id_search() is None: break
-                session.execute(text("""UPDATE planet_new_id_search SET id = (
-                                          SELECT id FROM planet_old_id_search WHERE
-                                            planet_old_id_search.x = planet_new_id_search.x AND
-                                            planet_old_id_search.y = planet_new_id_search.y AND
-                                            planet_old_id_search.z = planet_new_id_search.z AND
-                                            (planet_old_id_search.planetname = planet_new_id_search.planetname
-                                             OR planet_old_id_search.rulername = planet_new_id_search.rulername)
-                                          );"""))
-                # Final update
-                if load_planet_id_search() is None: break
-                break
-    
-            t2=time.time()-t1
-            excaliburlog("Lost planet ids match up in %.3f seconds" % (t2,))
-            t1=time.time()
     
             # Any planets in the temp table without an id are new
             # Insert them to the current table and the id(serial/auto_increment)
             #  will be generated, and we can then copy it back to the temp table
-            session.execute(text("INSERT INTO planet (rulername, planetname, active) SELECT rulername, planetname, :true FROM planet_temp WHERE id IS NULL;", bindparams=[true]))
-            session.execute(text("UPDATE planet_temp SET id = (SELECT id FROM planet WHERE planet.rulername = planet_temp.rulername AND planet.planetname = planet_temp.planetname AND planet.active = :true ORDER BY planet.id DESC) WHERE id IS NULL;", bindparams=[true]))
-    
+            session.execute(text("INSERT INTO planet (id, active) SELECT id, :true FROM planet_temp WHERE id NOT IN (SELECT id FROM planet);", bindparams=[true]))
+
             t2=time.time()-t1
-            excaliburlog("Generate new planet ids in %.3f seconds" % (t2,))
+            excaliburlog("Insert new planets in %.3f seconds" % (t2,))
             t1=time.time()
     
             # Create records of new planets,
@@ -933,8 +833,7 @@ def ticker(alt=False):
                                     SELECT :hour, :tick, planet.id, planet_temp.x, planet_temp.y, planet_temp.z
                                     FROM planet_temp, planet
                                     WHERE
-                                        planet.rulername = planet_temp.rulername AND
-                                        planet.planetname = planet_temp.planetname AND
+                                        planet.id= planet_temp.id AND
                                         planet.active = :true AND
                                         planet.age IS NULL
                                 ;""", bindparams=[tick, hour, true]))
@@ -973,7 +872,9 @@ def ticker(alt=False):
             t1=time.time()
     
             # For planets that are no longer present in the new dump
-            session.execute(text("UPDATE planet SET active = :false WHERE id NOT IN (SELECT id FROM planet_temp WHERE id IS NOT NULL);", bindparams=[false]))
+            session.execute(text("UPDATE planet SET active = :false WHERE active AND id NOT IN (SELECT id FROM planet_temp WHERE id IS NOT NULL);", bindparams=[false]))
+            # For planets that are present in the new dump but weren't. I don't think this should happen, but you never know
+            session.execute(text("UPDATE planet SET active = :true WHERE NOT active AND id IN (SELECT id FROM planet_temp WHERE id IS NOT NULL);", bindparams=[true]))
     
             t2=time.time()-t1
             excaliburlog("Deactivate old planets in %.3f seconds" % (t2,))
@@ -1372,10 +1273,10 @@ def find1man(max_age):
         else:
             for i in range(len(bots)):
                 if bots[i].getboolean("Misc", "findsmall"):
-                    if session.execute(text("SELECT planet_id FROM %sintel WHERE planet_id=%s;" % (prefixes[i], p.id))).rowcount == 0:
-                        session.execute(text("INSERT INTO %sintel (planet_id, alliance_id) VALUES (%s, %s);" % (prefixes[i], p.id, a.id)))
+                    if session.execute(text("SELECT planet_id FROM %sintel WHERE planet_id='%s';" % (prefixes[i], p.id))).rowcount == 0:
+                        session.execute(text("INSERT INTO %sintel (planet_id, alliance_id) VALUES ('%s', %s);" % (prefixes[i], p.id, a.id)))
                     else:
-                        session.execute(text("UPDATE %sintel set alliance_id=%s WHERE planet_id=%s;" % (prefixes[i], a.id, p.id)))
+                        session.execute(text("UPDATE %sintel set alliance_id=%s WHERE planet_id='%s';" % (prefixes[i], a.id, p.id)))
     session.commit()
     excaliburlog("Added intel for one-man alliances in %.3f seconds" % (time.time() - t_start))
     session.close()

@@ -523,7 +523,7 @@ ClusterHistory.galaxy_loader = dynamic_loader(GalaxyHistory)
 class Planet(Base):
     __tablename__ = 'planet'
     __table_args__ = (ForeignKeyConstraint(('x', 'y',), (Galaxy.x, Galaxy.y,)), {})
-    id = Column(Integer, primary_key=True)
+    id = Column(String(8), primary_key=True)
     active = Column(Boolean)
     age = Column(Integer)
     x = Column(Integer)
@@ -719,7 +719,7 @@ class PlanetHistory(Base):
     tick = Column(Integer, ForeignKey(Updates.id, ondelete='cascade'), primary_key=True, autoincrement=False)
     hour = Column(Integer, index=True)
     timestamp = Column(DateTime)
-    id = Column(Integer, ForeignKey(Planet.id), primary_key=True, autoincrement=False)
+    id = Column(String(8), ForeignKey(Planet.id), primary_key=True)
     active = Column(Boolean)
     age = Column(Integer)
     x = Column(Integer)
@@ -868,7 +868,7 @@ class PlanetExiles(Base):
                       ForeignKeyConstraint(('newx', 'newy',), (Galaxy.x, Galaxy.y,)), {})
     hour = Column(Integer, index=True)
     tick = Column(Integer, ForeignKey(Updates.id, ondelete='cascade'), primary_key=True, autoincrement=False)
-    id = Column(Integer, ForeignKey(Planet.id), primary_key=True, autoincrement=False)
+    id = Column(String(8), ForeignKey(Planet.id), primary_key=True)
     oldx = Column(Integer)
     oldy = Column(Integer)
     oldz = Column(Integer)
@@ -886,28 +886,28 @@ class PlanetIdles(Base):
     __tablename__ = 'planet_idles'
     hour = Column(Integer, index=True)
     tick = Column(Integer, ForeignKey(Updates.id, ondelete='cascade'), primary_key=True, autoincrement=False)
-    id = Column(Integer, ForeignKey(Planet.id), primary_key=True, autoincrement=False)
+    id = Column(String(8), ForeignKey(Planet.id), primary_key=True)
     idle = Column(Integer)
 PlanetIdles.planet = relation(Planet, backref="idles", order_by=desc(PlanetIdles.tick))
 class PlanetValueDrops(Base):
     __tablename__ = 'planet_value_drops'
     hour = Column(Integer, index=True)
     tick = Column(Integer, ForeignKey(Updates.id, ondelete='cascade'), primary_key=True, autoincrement=False)
-    id = Column(Integer, ForeignKey(Planet.id), primary_key=True, autoincrement=False)
+    id = Column(String(8), ForeignKey(Planet.id), primary_key=True)
     vdiff = Column(Integer)
 PlanetValueDrops.planet = relation(Planet, backref="value_drops", order_by=desc(PlanetValueDrops.tick))
 class PlanetLandings(Base):
     __tablename__ = 'planet_landings'
     hour = Column(Integer, index=True)
     tick = Column(Integer, ForeignKey(Updates.id, ondelete='cascade'), primary_key=True, autoincrement=False)
-    id = Column(Integer, ForeignKey(Planet.id), primary_key=True, autoincrement=False)
+    id = Column(String(8), ForeignKey(Planet.id), primary_key=True)
     rdiff = Column(Integer)
 PlanetLandings.planet = relation(Planet, backref="planet_landings", order_by=desc(PlanetLandings.tick))
 class PlanetLandedOn(Base):
     __tablename__ = 'planet_landed_on'
     hour = Column(Integer, index=True)
     tick = Column(Integer, ForeignKey(Updates.id, ondelete='cascade'), primary_key=True, autoincrement=False)
-    id = Column(Integer, ForeignKey(Planet.id), primary_key=True, autoincrement=False)
+    id = Column(String(8), ForeignKey(Planet.id), primary_key=True)
     rdiff = Column(Integer)
 PlanetLandedOn.planet = relation(Planet, backref="planet_landed_on", order_by=desc(PlanetLandedOn.tick))
 
@@ -1178,7 +1178,7 @@ class Feed(Base):
     alliance1_id = Column(Integer, ForeignKey(Alliance.id, ondelete='set null'), default=None, index=True)
     alliance2_id = Column(Integer, ForeignKey(Alliance.id, ondelete='set null'), default=None, index=True)
     alliance3_id = Column(Integer, ForeignKey(Alliance.id, ondelete='set null'), default=None, index=True)
-    planet_id = Column(Integer, ForeignKey(Planet.id, ondelete='set null'), default=None, index=True)
+    planet_id = Column(String(8), ForeignKey(Planet.id, ondelete='set null'), default=None, index=True)
     galaxy_id = Column(Integer, ForeignKey(Galaxy.id, ondelete='set null'), default=None, index=True)
     text = Column(String(255))
     def __str__(self):
@@ -1241,7 +1241,7 @@ galaxy_temp = Table('galaxy_temp', Base.metadata,
     Column('value', Integer),
     Column('xp', Integer))
 planet_temp = Table('planet_temp', Base.metadata,
-    Column('id', Integer),
+    Column('id', String(8)),
     Column('x', Integer, primary_key=True),
     Column('y', Integer, primary_key=True),
     Column('z', Integer, primary_key=True),
@@ -1266,31 +1266,6 @@ alliance_temp = Table('alliance_temp', Base.metadata,
     Column('size_avg', Integer),
     Column('score_avg', Integer),
     Column('points_avg', Integer))
-planet_new_id_search = Table('planet_new_id_search', Base.metadata,
-    Column('id', Integer),
-    Column('x', Integer, primary_key=True),
-    Column('y', Integer, primary_key=True),
-    Column('z', Integer, primary_key=True),
-    Column('planetname', String(255)),
-    Column('rulername', String(255)),
-    Column('race', String(255)),
-    Column('size', Integer),
-    Column('score', Integer),
-    Column('value', Integer),
-    Column('xp', Integer))
-planet_old_id_search = Table('planet_old_id_search', Base.metadata,
-    Column('id', Integer),
-    Column('x', Integer, primary_key=True),
-    Column('y', Integer, primary_key=True),
-    Column('z', Integer, primary_key=True),
-    Column('planetname', String(255)),
-    Column('rulername', String(255)),
-    Column('race', String(255)),
-    Column('size', Integer),
-    Column('score', Integer),
-    Column('value', Integer),
-    Column('xp', Integer),
-    Column('vdiff', Integer))
 
 # ########################################################################### #
 # #############################    USER TABLES    ########################### #
@@ -1305,7 +1280,7 @@ class User(Base):
     passwd = Column(String(255))
     active = Column(Boolean, default=True)
     access = Column(Integer, default=(Config.getint("Access","galmate") if "galmate" in Config.options("Access") else 0))
-    planet_id = Column(Integer, ForeignKey(Planet.id, ondelete='set null'), index=True)
+    planet_id = Column(String(8), ForeignKey(Planet.id, ondelete='set null'), index=True)
     url = Column(String(255))
     email = Column(String(255))
     emailre = re.compile(r"^([\w.-]+@[\w.-]+)")
@@ -1494,7 +1469,7 @@ class Channel(Base):
 
 class Intel(Base):
     __tablename__ = Config.get('DB', 'prefix') + 'intel'
-    planet_id = Column(Integer, ForeignKey(Planet.id, ondelete='cascade'), primary_key=True, autoincrement=False)
+    planet_id = Column(String(8), ForeignKey(Planet.id, ondelete='cascade'), primary_key=True)
     alliance_id = Column(Integer, ForeignKey(Alliance.id, ondelete='set null'), index=True)
     nick = Column(String(255))
     fakenick = Column(String(255))
@@ -1551,7 +1526,7 @@ class Target(Base):
     __table_args__ = (UniqueConstraint('planet_id','tick'), {})
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey(User.id, ondelete='cascade'), index=True)
-    planet_id = Column(Integer, ForeignKey(Planet.id, ondelete='cascade'), index=True)
+    planet_id = Column(String(8), ForeignKey(Planet.id, ondelete='cascade'), index=True)
     tick = Column(Integer)
 User.bookings = relation(Target, backref=backref('user', lazy='select'), lazy='dynamic', cascade='all, delete-orphan')
 Planet.bookings = relation(Target, backref=backref('planet'), lazy='dynamic', order_by=(asc(Target.tick)))
@@ -1611,7 +1586,7 @@ class AttackTarget(Base):
     __tablename__ = Config.get('DB', 'prefix') + 'attack_target'
     id = Column(Integer, primary_key=True)
     attack_id = Column(Integer, ForeignKey(Attack.id, ondelete='cascade'))
-    planet_id = Column(Integer, ForeignKey(Planet.id, ondelete='cascade'))
+    planet_id = Column(String(8), ForeignKey(Planet.id, ondelete='cascade'))
 Attack.planets = relation(Planet, secondary=AttackTarget.__table__,
                                 primaryjoin=AttackTarget.attack_id==Attack.id,
                               secondaryjoin=AttackTarget.planet_id==Planet.id, order_by=(asc(Planet.x), asc(Planet.y), asc(Planet.z)))
@@ -1686,7 +1661,7 @@ class Scan(Base):
     __table_args__ = (UniqueConstraint('pa_id','tick'), {})
     _scan_types = sorted(PA.options("scans"), cmp=lambda x,y: cmp(PA.getint(x, "type"), PA.getint(y, "type")))
     id = Column(Integer, primary_key=True)
-    planet_id = Column(Integer, ForeignKey(Planet.id, ondelete='cascade'), index=True)
+    planet_id = Column(String(8), ForeignKey(Planet.id, ondelete='cascade'), index=True)
     scantype = Column(Enum(*_scan_types, name="scantype"))
     tick = Column(Integer)
     time = Column(String(255))
@@ -1825,7 +1800,7 @@ class Request(Base):
     _requestable = [(type, PA.get(type, "name"),) for type in Scan._scan_types if PA.getboolean(type, "request")]
     id = Column(Integer, primary_key=True)
     requester_id = Column(Integer, ForeignKey(User.id, ondelete='cascade'))
-    planet_id = Column(Integer, ForeignKey(Planet.id, ondelete='cascade'), index=True)
+    planet_id = Column(String(8), ForeignKey(Planet.id, ondelete='cascade'), index=True)
     scantype = Column(Enum(*Scan._scan_types, name="scantype"))
     dists = Column(Integer)
     scan_id = Column(Integer, ForeignKey(Scan.id, ondelete='set null'))
@@ -2051,8 +2026,8 @@ class FleetScan(Base):
     __table_args__ = (UniqueConstraint('owner_id','target_id','fleet_size','fleet_name','landing_tick','mission'), {})
     id = Column(Integer, primary_key=True)
     scan_id = Column(Integer, ForeignKey(Scan.id, ondelete='cascade'))
-    owner_id = Column(Integer, ForeignKey(Planet.id, ondelete='cascade'))
-    target_id = Column(Integer, ForeignKey(Planet.id, ondelete='set null'))
+    owner_id = Column(String(8), ForeignKey(Planet.id, ondelete='cascade'))
+    target_id = Column(String(8), ForeignKey(Planet.id, ondelete='set null'))
     fleet_size = Column(Integer)
     fleet_name = Column(String(255))
     launch_tick = Column(Integer)
@@ -2077,8 +2052,8 @@ class CovOp(Base):
     __tablename__ = Config.get('DB', 'prefix') + 'covop'
     id = Column(Integer, primary_key=True)
     scan_id = Column(Integer, ForeignKey(Scan.id, ondelete='cascade'))
-    covopper_id = Column(Integer, ForeignKey(Planet.id, ondelete='set null'))
-    target_id = Column(Integer, ForeignKey(Planet.id, ondelete='cascade'))
+    covopper_id = Column(String(8), ForeignKey(Planet.id, ondelete='set null'))
+    target_id = Column(String(8), ForeignKey(Planet.id, ondelete='cascade'))
 Scan.covops = relation(CovOp, backref="scan")
 CovOp.covopper = relation(Planet, primaryjoin=CovOp.covopper_id==Planet.id)
 CovOp.target = relation(Planet, primaryjoin=CovOp.target_id==Planet.id)
